@@ -38,6 +38,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BloomFilterPolicy.cs" />
     <Compile Include="Cache.cs" />
     <Compile Include="Comparator.cs" />
     <Compile Include="CompressionLevel.cs" />

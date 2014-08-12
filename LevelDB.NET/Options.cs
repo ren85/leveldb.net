@@ -15,6 +15,7 @@ namespace LevelDB
         Env EnvValue { get; set; }
         Cache CacheValue { get; set; }
         Comparator ComparatorValue { get; set; }
+        BloomFilterPolicy BloomValue { get; set; }
 
         public Options()
         {
@@ -119,6 +120,16 @@ namespace LevelDB
             {
                 LevelDBInterop.leveldb_options_set_comparator(Handle, value.Handle);
                 this.ComparatorValue = value;
+            }
+        }
+
+        public BloomFilterPolicy BloomFilter
+        {
+            get { return BloomValue; }
+            set
+            {
+                LevelDBInterop.leveldb_options_set_filter_policy(Handle, value.Handle);
+                this.BloomValue = value;
             }
         }
 

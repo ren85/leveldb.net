@@ -110,6 +110,12 @@ namespace LevelDB
 
         [DllImport("LevelDB.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern void leveldb_env_destroy(IntPtr /*Env*/ cache);
+
+        [DllImport("LevelDB.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern IntPtr leveldb_filterpolicy_create_bloom(int bits_per_key);
+
+        [DllImport("LevelDB.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern IntPtr leveldb_filterpolicy_destroy(IntPtr /*leveldb_filterpolicy_t*/ policy);
         #endregion
 
         #region Iterator
@@ -186,6 +192,9 @@ namespace LevelDB
 
         [DllImport("LevelDB.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern void leveldb_options_set_comparator(IntPtr /*Options*/ options, IntPtr /*Comparator*/ comparer);
+
+        [DllImport("LevelDB.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void leveldb_options_set_filter_policy(IntPtr /*Options*/ options, IntPtr /*FilterPolicy*/ policy);
         #endregion
 
         #region ReadOptions
