@@ -311,9 +311,9 @@ namespace LevelDB
             using (var iterator = this.CreateIterator(new ReadOptions { Snapshot = sn }))
             {
                 iterator.SeekToFirst();
-                while (iterator.IsValid())
+                while (iterator.Valid())
                 {
-                    yield return new KeyValuePair<string, string>(iterator.GetStringKey(), iterator.GetStringValue());
+                    yield return new KeyValuePair<string, string>(iterator.StringKey(), iterator.StringValue());
                     iterator.Next();
                 }
             }
@@ -325,9 +325,9 @@ namespace LevelDB
             using (var iterator = this.CreateIterator(new ReadOptions { Snapshot = sn }))
             {
                 iterator.SeekToFirst();
-                while (iterator.IsValid())
+                while (iterator.Valid())
                 {
-                    yield return new KeyValuePair<byte[], byte[]>(iterator.GetKey(), iterator.GetValue());
+                    yield return new KeyValuePair<byte[], byte[]>(iterator.Key(), iterator.Value());
                     iterator.Next();
                 }
             }

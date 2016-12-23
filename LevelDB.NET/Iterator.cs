@@ -21,7 +21,7 @@ namespace LevelDB
         /// not valid.  
         /// </summary>
         /// <returns>This method returns true iff the iterator is valid.</returns>
-        public bool IsValid()
+        public bool Valid()
         {
             var result = LevelDBInterop.leveldb_iter_valid(Handle) != 0;
             GC.KeepAlive(this);
@@ -95,16 +95,16 @@ namespace LevelDB
         /// Return the key for the current entry.  
         /// REQUIRES: IsValid()
         /// </summary>
-        public string GetStringKey()
+        public string StringKey()
         {
-            return Encoding.UTF8.GetString(GetKey());
+            return Encoding.UTF8.GetString(Key());
         }
 
         /// <summary>
         /// Return the key for the current entry.  
         /// REQUIRES: IsValid()
         /// </summary>
-        public byte[] GetKey()
+        public byte[] Key()
         {
             IntPtr length;
             var key = LevelDBInterop.leveldb_iter_key(Handle, out length);
@@ -120,16 +120,16 @@ namespace LevelDB
         /// Return the value for the current entry.  
         /// REQUIRES: IsValid()
         /// </summary>
-        public string GetStringValue()
+        public string StringValue()
         {
-            return Encoding.UTF8.GetString(GetValue());
+            return Encoding.UTF8.GetString(Value());
         }
 
         /// <summary>
         /// Return the value for the current entry.  
         /// REQUIRES: IsValid()
         /// </summary>
-        public unsafe byte[] GetValue()
+        public unsafe byte[] Value()
         {
             IntPtr length;
             var value = LevelDBInterop.leveldb_iter_value(Handle, out length);

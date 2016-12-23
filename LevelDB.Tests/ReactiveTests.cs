@@ -80,9 +80,9 @@ namespace LevelDB.Tests
                 using (var iterator = db.CreateIterator(new ReadOptions()))
                 {
                     iterator.SeekToFirst();
-                    while (iterator.IsValid())
+                    while (iterator.Valid())
                     {
-                        var key = iterator.GetStringKey();
+                        var key = iterator.StringKey();
                         actual.Add(key);
                         iterator.Next();
                     }
