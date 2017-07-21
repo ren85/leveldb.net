@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -292,6 +293,100 @@ namespace LevelDB
                 LevelDBInterop.leveldb_free(ptr);
                 GC.KeepAlive(this);
             }
+        }
+
+        /// <summary>
+        /// Compact the underlying storage.
+        /// In particular, deleted and overwritten versions are discarded,
+        /// and the data is rearranged to reduce the cost of operations
+        /// needed to access the data.  This operation should typically only
+        /// be invoked by users who understand the underlying implementation.
+        /// </summary>
+        /// <param name="startKey"></param>
+        /// <param name="limitKey"></param>
+        public void Compact()
+        {
+            byte[] startKey = null;
+            byte[] limitKey = null;
+            CompactRange(startKey, limitKey);
+        }
+
+        /// <summary>
+        /// Compact the underlying storage for the key range [*begin,*end].
+        /// In particular, deleted and overwritten versions are discarded,
+        /// and the data is rearranged to reduce the cost of operations
+        /// needed to access the data.  This operation should typically only
+        /// be invoked by users who understand the underlying implementation.
+        /// </summary>
+        /// <param name="startKey"></param>
+        /// <param name="limitKey"></param>
+        public void CompactRange(string startKey, string limitKey)
+        {
+            CompactRange(Encoding.UTF8.GetBytes(startKey), Encoding.UTF8.GetBytes(limitKey));
+        }
+
+        /// <summary>
+        /// Compact the underlying storage for the key range [*begin,*end].
+        /// In particular, deleted and overwritten versions are discarded,
+        /// and the data is rearranged to reduce the cost of operations
+        /// needed to access the data.  This operation should typically only
+        /// be invoked by users who understand the underlying implementation.
+        /// </summary>
+        /// <param name="startKey"></param>
+        /// <param name="limitKey"></param>
+        public void CompactRange(byte[] startKey, byte[] limitKey)
+        {
+            LevelDBInterop.leveldb_compact_range(Handle, startKey, LevelDBInterop.MarshalSize(startKey),
+                limitKey, LevelDBInterop.MarshalSize(limitKey));
+            GC.KeepAlive(this);
+        }
+
+        /// <summary>
+        /// Returns the approximate file system space used by keys in "[start .. limit)".
+        ///
+        /// Note that the returned sizes measure file system space usage, so
+        /// if the user data compresses by a factor of ten, the returned
+        /// sizes will be one-tenth the size of the corresponding user data size.
+        ///
+        /// The results may not include the sizes of recently written data.
+        /// </summary>
+        /// <param name="startKey"></param>
+        /// <param name="limitKey"></param>
+        /// <returns></returns>
+        public unsafe long GetApproximateSize(string startKey, string limitKey)
+        {
+            return GetApproximateSize(Encoding.UTF8.GetBytes(startKey), Encoding.UTF8.GetBytes(limitKey));
+        }
+
+        /// <summary>
+        /// Returns the approximate file system space used by keys in "[start .. limit)".
+        ///
+        /// Note that the returned sizes measure file system space usage, so
+        /// if the user data compresses by a factor of ten, the returned
+        /// sizes will be one-tenth the size of the corresponding user data size.
+        ///
+        /// The results may not include the sizes of recently written data.
+        /// </summary>
+        /// <param name="startKey"></param>
+        /// <param name="limitKey"></param>
+        /// <returns></returns>
+        public unsafe long GetApproximateSize(byte[] startKey, byte[] limitKey)
+        {
+            IntPtr l1 = (IntPtr)startKey.Length;
+            IntPtr l2 = (IntPtr)limitKey.Length;
+            long[] sizes = new long[1];
+
+            LevelDBInterop.leveldb_approximate_sizes(Handle, 1, new byte[][] { startKey }, new IntPtr[] { l1 }, new byte[][] { limitKey }, new IntPtr[] { l2 }, sizes);
+            GC.KeepAlive(this);
+
+            return sizes[0];
+        }
+
+        private IntPtr MarshalArray(byte[] ar)
+        {
+            var p = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(byte)) * ar.Length);
+            Marshal.Copy(ar, 0, p, ar.Length);
+            return p;
         }
 
         protected override void FreeUnManagedObjects()
