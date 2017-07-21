@@ -73,8 +73,13 @@ namespace LevelDB
         [DllImport("LevelDB.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr leveldb_get(IntPtr /* DB */ db, IntPtr /* ReadOptions*/ options, IntPtr key, IntPtr keylen, out IntPtr vallen, out IntPtr errptr);
 
-        //[DllImport("LevelDB.dll", CallingConvention = CallingConvention.Cdecl)]
-        //static extern void leveldb_approximate_sizes(IntPtr /* DB */ db, int num_ranges, byte[] range_start_key, long range_start_key_len, byte[] range_limit_key, long range_limit_key_len, out long sizes);
+        [DllImport("LevelDB.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void leveldb_approximate_sizes(IntPtr /* DB */ db, int num_ranges,
+            [MarshalAs(UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof(JaggedArrayMarshaler))] byte[][] startKeys,
+            IntPtr[] startKeysLens,
+            [MarshalAs(UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof(JaggedArrayMarshaler))] byte[][] limitKeys,
+            IntPtr[] limitKeysLens,
+            [In, Out] long[] sizeList);
 
         [DllImport("LevelDB.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr leveldb_create_iterator(IntPtr /* DB */ db, IntPtr /* ReadOption */ options);
@@ -94,13 +99,15 @@ namespace LevelDB
         [DllImport("LevelDB.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern void leveldb_destroy_db(IntPtr /* Options*/ options, string name, out IntPtr error);
 
+        [DllImport("leveldb", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void leveldb_compact_range(IntPtr db, byte[] startKey, IntPtr startKeyLen, byte[] limitKey, IntPtr limitKeyLen);
+
         #region extensions
 
         [DllImport("LevelDB.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern void leveldb_free(IntPtr /* void */ ptr);
 
         #endregion
-
 
         #endregion
 
@@ -269,6 +276,67 @@ namespace LevelDB
 
         [DllImport("LevelDB.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern void leveldb_comparator_destroy(IntPtr /* leveldb_comparator_t* */ cmp);
+
+        #endregion
+
+        #region Marshal
+
+        internal static IntPtr MarshalSize(byte[] byteArray)
+        {
+            return (IntPtr)(byteArray?.Length ?? 0);
+        }
+
+        public class JaggedArrayMarshaler : ICustomMarshaler
+        {
+            private GCHandle[] handles;
+            private GCHandle buffer;
+            private Array[] array;
+
+            public static ICustomMarshaler GetInstance(string cookie)
+            {
+                return new JaggedArrayMarshaler();
+            }
+
+            public void CleanUpManagedData(object ManagedObj)
+            {
+            }
+
+            public void CleanUpNativeData(IntPtr pNativeData)
+            {
+                buffer.Free();
+                foreach (GCHandle handle in handles)
+                {
+                    handle.Free();
+                }
+            }
+
+            public int GetNativeDataSize()
+            {
+                return 4;
+            }
+
+            public IntPtr MarshalManagedToNative(object ManagedObj)
+            {
+                array = (Array[])ManagedObj;
+                handles = new GCHandle[array.Length];
+                for (int i = 0; i < array.Length; i++)
+                {
+                    handles[i] = GCHandle.Alloc(array[i], GCHandleType.Pinned);
+                }
+                IntPtr[] pointers = new IntPtr[handles.Length];
+                for (int i = 0; i < handles.Length; i++)
+                {
+                    pointers[i] = handles[i].AddrOfPinnedObject();
+                }
+                buffer = GCHandle.Alloc(pointers, GCHandleType.Pinned);
+                return buffer.AddrOfPinnedObject();
+            }
+
+            public object MarshalNativeToManaged(IntPtr pNativeData)
+            {
+                return array;
+            }
+        }
 
         #endregion
     }
